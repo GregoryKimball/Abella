@@ -1,6 +1,6 @@
 /*
  *
- * Abella Sine Generator for ATMEGA328
+ * Abella Audio Generator for ATMEGA328
  * 
  *
  * Gregory Kimball 2015
@@ -12,10 +12,11 @@
 #include "avr/pgmspace.h"
 #include "math.h"
 
-// table of 256 sine values / one sine period / stored in flash memory
+// table of 256 waveform values / one period / stored in flash memory
+// generated using waveform summation of root frequency, higher 2 octaves, and higher 2 perfect fifths
 PROGMEM  prog_uchar sine256[]  = 
-
-{127,132,136,141,145,150,155,159,164,168,172,177,181,185,189,193,196,200,203,207,210,213,216,218,221,223,226,228,230,231,233,234,236,236,237,238,238,239,239,239,239,238,238,237,236,235,234,232,230,229,227,225,223,221,218,216,214,211,208,205,202,200,197,194,191,187,184,181,178,175,172,168,165,162,159,155,153,150,147,143,141,138,135,132,130,128,125,123,121,119,117,115,114,112,111,110,109,108,106,106,105,104,104,104,104,104,103,104,104,104,105,105,107,107,108,109,110,111,113,114,115,117,118,120,121,122,124,125,127,129,130,132,133,134,136,137,139,140,141,143,144,145,146,147,147,149,149,150,150,150,151,150,150,150,150,150,149,148,148,146,146,144,143,142,140,139,137,135,133,131,129,126,124,122,119,116,113,111,107,104,101,99,95,92,89,86,82,79,76,73,70,67,64,60,57,54,52,49,46,43,40,38,36,33,31,29,27,25,24,22,20,19,18,17,16,16,15,15,15,15,16,16,17,18,19,20,21,23,24,26,28,31,33,36,38,41,44,47,51,54,58,61,65,69,73,77,82,86,90,95,99,104,109,113,118,122
+{
+  127,132,136,141,145,150,155,159,164,168,172,177,181,185,189,193,196,200,203,207,210,213,216,218,221,223,226,228,230,231,233,234,236,236,237,238,238,239,239,239,239,238,238,237,236,235,234,232,230,229,227,225,223,221,218,216,214,211,208,205,202,200,197,194,191,187,184,181,178,175,172,168,165,162,159,155,153,150,147,143,141,138,135,132,130,128,125,123,121,119,117,115,114,112,111,110,109,108,106,106,105,104,104,104,104,104,103,104,104,104,105,105,107,107,108,109,110,111,113,114,115,117,118,120,121,122,124,125,127,129,130,132,133,134,136,137,139,140,141,143,144,145,146,147,147,149,149,150,150,150,151,150,150,150,150,150,149,148,148,146,146,144,143,142,140,139,137,135,133,131,129,126,124,122,119,116,113,111,107,104,101,99,95,92,89,86,82,79,76,73,70,67,64,60,57,54,52,49,46,43,40,38,36,33,31,29,27,25,24,22,20,19,18,17,16,16,15,15,15,15,16,16,17,18,19,20,21,23,24,26,28,31,33,36,38,41,44,47,51,54,58,61,65,69,73,77,82,86,90,95,99,104,109,113,118,122
 };//multi sine
 
 
@@ -40,7 +41,6 @@ int Fsharpmajor[] = {185,208,233,247,277,311,349,370,415,466,494,554,622,698,740
 int Gsharpmajor[] = {104,117,131,139,156,175,196,208,233,262,277,311,349,392,415};
 int Asharpmajor[] = {117,131,147,156,175,196,220,233,262,294,311,349,392,440,466};
 
-//cde ga
 int Cmajorpent[] = {131,147,165,    196,220,    262,294,330,    392,440,    523};
 int Dmajorpent[] = {147,165,185,    220,247,    294,330,370,    440,494,    587};
 int Emajorpent[] = {165,185,208,    247,277,    330,370,415,    494,554,    660};
@@ -55,13 +55,11 @@ int Fsharpmajorpent[] = {185,208,233,    277,311,    370,415,466,    554,622,   
 int Gsharpmajorpent[] = {104,117,131,    156,175,    208,233,262,    311,349,    415};
 int Asharpmajorpent[] = {117,131,147,    175,196,    233,262,294,    349,392,    466};
 
-int chromatic[] = {  110,117,123,131,139,147,156,165,175,185,196,208,220, 233,247, 262,277,294,311,330,349,370,392,415,440} ;
+int chromatic[] = {110,117,123,131,139,147,156,165,175,185,196,208,220, 233,247, 262,277,294,311,330,349,370,392,415,440} ;
 //int pentatonic[] = {116,139, 156,185,208,233,277,311,370,415,466};
 //int pentatonic3[] = {116,139, 156,185,208,233,277,311,370,415,466,554,622,740,830,932};
 //int Cmajorpentatonic[] = {262, 293, 330, 392, 440, 523, 587, 659, 784, 880, 1047};
 //int Cminorpentatonic[] = {262, 311, 349, 392, 466, 523, 622, 698, 784, 932, 1047};
-
-
 
 int all_notes[] = {131,138,147,155,165,175,185,196,207,220, 233,247, 262,277,294,311,330,349,370,392,415,440};
 
@@ -99,17 +97,27 @@ volatile unsigned long tword_m;  // dds tuning word m
 
 
 
- const int myPins[] = {10, 9, 6, 3};
- const int pinCount = 4;
- const int White = 6;
- const int Blue = 10;
- const int Green = 9;
- const int Red = 3;
- 
- const int r_int[] = {100, 80, 60,  0,  0,  0, 80};
- const int g_int[] = {  0, 30, 60,100, 50,  0,  0};
- const int b_int[] = {  0,  0,  0,  0, 50,120,100};
- const int w_int[] = {  0,  0,  0,  0,  0, 0,  0};
+const int myPins[] = {10, 9, 6, 3};
+
+const int Selector_pin = 0
+const int DIP_pin = 1
+const int Clutch_pin = 2
+const int Audio_pin = 11
+const int Z_accel_pin = 3
+
+const int pinCount = 4;
+const int White = 6;
+const int Blue = 10;
+const int Green = 9;
+const int Red = 3;
+
+
+
+//lookup table for RBGW values by note A->G 
+const int r_int[] = {100, 80, 60,  0,  0,  0, 80};
+const int g_int[] = {  0, 30, 60,100, 50,  0,  0};
+const int b_int[] = {  0,  0,  0,  0, 50,120,100};
+const int w_int[] = {  0,  0,  0,  0,  0, 0,  0};
 
 
 
@@ -120,7 +128,7 @@ void setup()
  
   Serial.begin(115200);        // connect to the serial port
   Serial.println("DDS Test");
-  pinMode(11, OUTPUT);     // pin11= PWM  output / frequency output
+  pinMode(Audio_pin, OUTPUT);     // pin11= PWM  output / frequency output
   pinMode(2,INPUT); //half stepper
   
   for (int thisPin =0; thisPin < pinCount; thisPin++)
@@ -143,33 +151,41 @@ void setup()
 
 void loop()
 {
-  int c = 0,cc=0;int d = 0, e=0;
+  int c = 0,cc=0;
+  int key = 0, clutch = 0;
   
-  int freq_in=0;int last_freq=0;int freq_color=0;int raw_freq = 0;
+  int freq_in=0;
+  int last_freq=0;
+  int freq_color=0;
+  int raw_freq = 0;
   
-  while(1) {
+  while(1) 
+  {
     if (c4ms > 10) 
     {                 // timer / wait fou a full second
       c4ms=0;
       c4ms++;       
 
-      acc_z =  (analogRead(3) - 227)/-1.5;      
-      d= analogRead(1);
-      e = analogRead(2);
-
-      SetScale(d);      
-      raw_freq = analogRead(0);      
+      acc_z =  (analogRead(Z_accel_pin) - 227)/-1.5;   
+      key = analogRead(DIP_pin);
+      clutch = analogRead(Clutch_pin);
+      raw_freq = analogRead(Selector_pin);      
       
+      
+      SetScale(key);  
       freq_in=raw_freq;
       freq_color=raw_freq;
       
 
-      if ((freq_in < last_freq + 7 && freq_in > last_freq - 7 ) || e > 100 )
+      bool clutch_active = e > 100;
+      bool same_freq = (freq_in < last_freq + 7 && freq_in > last_freq - 7 );
+
+      if (same_freq || clutch_active )
       {
-          Serial.print("NOO  ");
-          if (freq_in < last_freq + 7 && freq_in > last_freq - 7 ) 
+         Serial.print("NOO  ");
+         if (!clutch_active) 
             freq_color=last_freq;
-          freq_in = last_freq;        
+         freq_in = last_freq;        
       }
       else
       {        
@@ -178,29 +194,32 @@ void loop()
 
 
   
-      
+      //determine the frequency (Hz) for the audio
       c = freq_in/bin_size;
       if (c==notes_len)
          c=notes_len-1;
-         
-      cc = freq_color/bin_size;
-      if (cc==notes_len)
-         cc=notes_len-1;      
-      
-      dfreq= notes[c] + acc_z;       
-  
-      SetLightContinuous(notes[cc]);
-
+      dfreq = notes[c] + acc_z;   
+      //set new frequency (Hz) for the audio
       cbi (TIMSK2,TOIE2);              // disble Timer2 Interrupt
       tword_m=pow(2,32)*dfreq/refclk;  // calulate DDS new tuning word
       sbi (TIMSK2,TOIE2);              // enable Timer2 Interrupt 
-
-
-      Serial.print("   ");
-      Serial.print(d);
+      
+         
+      //determine the frequency (Hz) for the color display
+      cc = freq_color/bin_size;
+      if (cc==notes_len)
+         cc=notes_len-1;          
+      //set new frequency (Hz) for the color display  
+      SetLightContinuous(notes[cc]);
+     
+      
+      
+  
 
       // serial commands for debugging
       /*
+      Serial.print("   ");
+      Serial.print(d);      
       Serial.print(e);
       Serial.print("   ");
       Serial.print(c);
@@ -209,10 +228,9 @@ void loop()
       Serial.print("   ");         
       Serial.print(last_freq);
       Serial.print("   ");
-      Serial.print(dfreq);*/
-            
-       Serial.println("  ");
-
+      Serial.print(dfreq);
+      Serial.println("  ");
+      */
      
     }
 
