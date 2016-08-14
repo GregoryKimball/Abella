@@ -1,13 +1,14 @@
 /*
  *
- * DDS Sine Generator mit ATMEGS 168
- * Timer2 generates the  31250 KHz Clock Interrupt
+ * Abella Sine Generator for ATMEGA328
+ * 
  *
- /* KHM 2009 /  Martin Nawrath
- * Kunsthochschule fuer Medien Koeln
- * Academy of Media Arts Cologne */
+ * Gregory Kimball 2015
+ * 
+ * 
  */
-
+ 
+ 
 #include "avr/pgmspace.h"
 #include "math.h"
 
